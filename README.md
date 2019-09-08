@@ -5,23 +5,32 @@ Automated launch EKS or ECS cluster, worker nodes with Auto Scaling Group are ma
 
 
 ## Prerequisite
-awscli
-cdk
+[awscli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+[cdk](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html#getting_started_install)
 
 
 ## Configure environment
 
-// Set fowllowing environemnt varibales for ECS
-IS_ECS
-ECS_CLUSTER_NAME
+```bash
 
-// Set fowllowing environemnt varibales for EKS
-EKS_CLUSTER_NAME
+# Set fowllowing environemnt varibales for ECS
+IS_ECS=
+ECS_CLUSTER_NAME=
+
+# Set fowllowing environemnt varibales for EKS
+EKS_CLUSTER_NAME=
+
+```
+
 
 ## Provision
 
+```bash
+
 npm run build
 cdk deploy
+
+```
 
 
 ## Note
