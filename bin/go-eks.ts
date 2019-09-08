@@ -10,7 +10,7 @@ const stack = new GoEksStack(app, 'GoEksStack', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION
-    }
+    },
 });
 
 //Tag envirionment & Owner

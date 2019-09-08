@@ -12,6 +12,7 @@ import { BaseNetwrok } from './base-network';
 
 export interface EcsWithSpotProps {
     baseNetwork: BaseNetwrok;
+    clusterName: string;
     keyPairEC2: string;
     maxSizeASG: string;
     minSizeASG: string;
@@ -61,7 +62,8 @@ export class EcsWithSpot extends cdk.Construct {
         this.nodesSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22));
 
         this.cluster = new ecs.Cluster(this, "EcsClusterWithSpot", {
-            vpc: props.baseNetwork.vpc
+            vpc: props.baseNetwork.vpc,
+            clusterName: props.clusterName
         });
         
         this.nodesLaunchTemplate = new ec2.CfnLaunchTemplate(this, "NodesLaunchTemplate", {
@@ -125,7 +127,7 @@ export class EcsWithSpot extends cdk.Construct {
             },
             tags: [{
                 key: "Name",
-                value: "Member-of-NodesAutoScalingGroup",
+                value: "nodes-asg-"+this.cluster.clusterName,
                 propagateAtLaunch: true
             }]
         });

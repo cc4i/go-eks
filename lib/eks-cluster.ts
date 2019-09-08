@@ -10,12 +10,7 @@ import { BaseNetwrok } from './base-network';
 
 export interface EksClusterProps {
     baseNetwork: BaseNetwrok;
-    keyPairEC2: string;
-    maxSizeASG: string;
-    minSizeASG: string;
-    desiredCapacityASG: string;
-    cooldownASG: string;
-    onDemandPercentage: number;
+    clusterName: string;
 }
 
 export class EksCluster extends cdk.Construct {
@@ -56,7 +51,7 @@ export class EksCluster extends cdk.Construct {
                 ]
             },
             roleArn: eksRole.roleArn,
-            name: cdk.Aws.STACK_NAME+"-eks-cluster"
+            name: props.clusterName
         })
 
     }

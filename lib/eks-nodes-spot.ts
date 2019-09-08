@@ -5,7 +5,6 @@ import autoscaling = require('@aws-cdk/aws-autoscaling');
 //import cxapi = require("@aws-cdk/cx-api");
 //import ssm = require('@aws-cdk/aws-ssm');
 import iam = require('@aws-cdk/aws-iam');
-// import ecsp = require('@aws-cdk/aws-ecs-patterns');
 
 import { BaseNetwrok } from './base-network';
 import { EksCluster } from './eks-cluster'
@@ -34,7 +33,7 @@ export class EksNodesSpot extends cdk.Construct {
         super(scope, id)
 
         this.nodesRole = new iam.Role(this, "NodesRole", {
-            roleName: "nodes-for-ecs-role",
+            roleName: "nodes-for-eks-role",
             assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
             managedPolicies: [
                 {managedPolicyArn: "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"},
@@ -85,17 +84,6 @@ export class EksNodesSpot extends cdk.Construct {
             },
         });
         
-        // this.nodesLaunchTemplate.addOverride("Metadata",{
-        //     "AWS::CloudFormation::Init":{
-        //         "config": {
-        //             "files": {
-        //                 "/etc/ecs/ecs.config": {
-        //                     "content": ["ECS_CLUSTER="+this.cluster.clusterName].join('\n')
-        //                 }
-        //             }
-        //         }
-        //     }
-        // });
            
         this.autoScalingGroup = new autoscaling.CfnAutoScalingGroup(this, "NodesAutoScalingGroup", {
             
@@ -131,12 +119,23 @@ export class EksNodesSpot extends cdk.Construct {
                     ]
                 }
             },
-            tags: [{
-                key: "Name",
-                value: "Member-of-NodesAutoScalingGroup",
-                propagateAtLaunch: true
-            }]
+            // Pretty important to add tag - "kubernetes.io/cluster/", otherwaise nodes 
+            // would be failed to register into EKS cluster
+            tags: [
+                {
+                    key: "Name",
+                    value: "nodes-asg-"+props.eksCluster.eksCluster.name,
+                    propagateAtLaunch: true
+                },
+                {
+                    key: "kubernetes.io/cluster/"+props.eksCluster.eksCluster.name,
+                    value: "owned",
+                    propagateAtLaunch: true
+                },
+
+            ]
         });
+        
         this.autoScalingGroup.node.addDependency(this.nodesLaunchTemplate);
         this.autoScalingGroup.addDependsOn(props.eksCluster.eksCluster);
         this.autoScalingGroup.addOverride("UpdatePolicy",{
