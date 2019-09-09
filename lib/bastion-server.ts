@@ -42,43 +42,72 @@ export class Bastion extends cdk.Construct {
             
         });
         this.bastion.connections.allowFromAnyIpv4(ec2.Port.tcp(22))
+        this.bastion.instance.addOverride("Metadata", {"AWS::CloudFormation::Init":
+            {
+                "config": {
+                    "files": {
+                        "/home/ec2-user/first-run.sh": {
+                            "content": [
+                                "#!/bin/bash",
+                                "set -xe",
+                                "sleep 30",
+                                "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash",
+                                ". ~/.nvm/nvm.sh",
+                                "nvm install node",
+                                "npm i -g aws-cdk",
+                                "mkdir ~/bin",
+                                "curl -o ~/bin/kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/kubectl",
+                                "chmod +x ~/bin/kubectl",
+                                "curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator",
+                                "chmod +x ~/bin/aws-iam-authenticator",
+                                "git clone https://github.com/cc4i/go-eks.git",
+                    
+                                "cd go-eks",
+                                
+                                "export EKS_CLUSTER_NAME="+eks_cluster_name,
+                                "export EKS_STAGE_2=yes",
+                                "export STACK_NAME=GoStackClusterStack",
+                                "export AWS_DEFAULT_REGION="+cdk.Aws.REGION,
+                                "export AWS_ACCESS_KEY_ID="+process.env.AWS_ACCESS_KEY_ID,
+                                "export AWS_SECRET_ACCESS_KEY="+process.env.AWS_SECRET_ACCESS_KEY,
+                                "npm install",
+                                "npm run build",
+                                "cdk deploy GoEksCluster --require-approval never",
+                                "cd ~",
+                                "aws eks --region "+cdk.Aws.REGION+" update-kubeconfig --name "+eks_cluster_name,
+                                "curl -o ~/aws-auth-cm.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/aws-auth-cm.yaml",
+                                "sed -i -e 's/<ARN of instance role (not instance profile)>/arn:aws:iam::"+cdk.Aws.ACCOUNT_ID+":role"+"\\"+"/nodes-for-eks-role/g' ~/aws-auth-cm.yaml",
+                                "kubectl apply -f ~/aws-auth-cm.yaml",
+                                                   
+                            ].join('\n'),
+                            "mode": "000755",
+                            "owner": "ec2-user",
+                            "group": "ec2-user"
+                        }
+                    },
+                    // "commands": {
+                    //     "agent1": {
+                    //         "command":  "./first-run.sh >./run.log 2>./run.log",
+                    //         "env": {
+                    //             "STACK_NAME": `${cdk.Aws.STACK_NAME}`,
+                    //             "AWS_DEFAULT_REGION": `${cdk.Aws.REGION}`,
+                    //             "AWS_ACCESS_KEY_ID": process.env.AWS_ACCESS_KEY_ID,
+                    //             "AWS_SECRET_ACCESS_KEY": process.env.AWS_SECRET_ACCESS_KEY
+                    //         },
+                    //         "cwd": "/home/ec2-user",
+                    //         "ignoreErrors": false
+                    //     }
+                    // }
+                }
+            }}
+        );
+        
         this.bastion.addUserData(
-            "cat << EOF > ~/first.sh",
-            "#!/bin/bash",
-            "set -xe",
-            "sleep 30",
-            "sudo yum update -y",
-            "sudo yum install -y aws-cfn-bootstrap aws-cli jq wget git",
-            "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash",
-            ". ~/.nvm/nvm.sh",
-            "nvm install node",
-            "npm i -g aws-cdk",
-            "mkdir ~/bin",
-            "curl -o ~/bin/kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/kubectl",
-            "chmod +x ~/bin/kubectl",
-            "curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator",
-            "chmod +x ~/bin/aws-iam-authenticator",
-            "git clone https://github.com/cc4i/go-eks.git",
-
-            "cd go-eks",
-            
-            "export EKS_CLUSTER_NAME="+eks_cluster_name,
-            "export EKS_STAGE_2=yes",
-            "export STACK_NAME=GoStackClusterStack",
-            "export AWS_DEFAULT_REGION="+cdk.Aws.REGION,
-            "export AWS_ACCESS_KEY_ID="+process.env.AWS_ACCESS_KEY_ID,
-            "export AWS_SECRET_ACCESS_KEY="+process.env.AWS_SECRET_ACCESS_KEY,
-            "npm install",
-            "npm run build",
-            "cdk deploy --require-approval never",
-            "cd ~",
-            "aws eks --region "+cdk.Aws.REGION+" update-kubeconfig --name "+eks_cluster_name,
-            "curl -o ~/aws-auth-cm.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/aws-auth-cm.yaml",
-            "sed -i -e 's/<ARN of instance role (not instance profile)>/arn:aws:iam::"+cdk.Aws.ACCOUNT_ID+":role"+"\\"+"/nodes-for-eks-role/g' ~/aws-auth-cm.yaml",
-            "kubectl apply -f ~/aws-auth-cm.yaml",
-            "EOF",
-            "chmod +x ~/first.sh",
-            "nohup ~/first.sh &"
+            `set -xe`,
+            `sudo yum update -y`,
+            `sudo yum install -y aws-cfn-bootstrap aws-cli jq wget git`,
+            `/opt/aws/bin/cfn-init -v --stack ${cdk.Aws.STACK_NAME} --resource ${this.bastion.instance.logicalId} --region ${cdk.Aws.REGION}`,
+            `nohup /home/ec2-user/first-run.sh &`
 
         );
         
