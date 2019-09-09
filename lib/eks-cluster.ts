@@ -9,14 +9,19 @@ import { BaseNetwrok } from './base-network';
 
 
 export interface EksClusterProps {
-    baseNetwork: BaseNetwrok;
+    //baseNetwork: BaseNetwrok;
+    vpcId: string;
+    publicSubne0tId: string;
+    publicSubne1tId: string;
+    privateSubne0tId: string;
+    privateSubne1tId: string;
+    controlPlaneSGId: string;
     clusterName: string;
 }
 
 export class EksCluster extends cdk.Construct {
 
     eksCluster: eks.CfnCluster
-    controlPlaneSG: ec2.SecurityGroup
 
     constructor(scope: cdk.Construct, id: string, props: EksClusterProps) {
         super(scope, id);
@@ -36,18 +41,16 @@ export class EksCluster extends cdk.Construct {
             })
           );
 
-        this.controlPlaneSG = new ec2.SecurityGroup(this, `EksControlPlaneSG`, {
-            vpc: props.baseNetwork.vpc
-        });
+       
 
         this.eksCluster = new eks.CfnCluster(this,"EksCluster",{
             resourcesVpcConfig: {
-                securityGroupIds: [this.controlPlaneSG.securityGroupId],
+                securityGroupIds: [props.controlPlaneSGId],
                 subnetIds: [
-                    props.baseNetwork.vpc.publicSubnets[0].subnetId,
-                    props.baseNetwork.vpc.publicSubnets[1].subnetId,
-                    props.baseNetwork.vpc.privateSubnets[0].subnetId,
-                    props.baseNetwork.vpc.privateSubnets[1].subnetId
+                    props.publicSubne0tId,
+                    props.publicSubne1tId,
+                    props.privateSubne0tId,
+                    props.privateSubne1tId
                 ]
             },
             roleArn: eksRole.roleArn,

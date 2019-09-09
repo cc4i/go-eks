@@ -12,7 +12,12 @@ import { EksCluster } from './eks-cluster'
 
 export interface EksNodesProps {
     eksCluster: EksCluster;
-    baseNetwork: BaseNetwrok;
+    nodesSGId: string;
+    nodesSharedSGId: string;
+    publicSubne0tId: string;
+    publicSubne1tId: string;
+    privateSubne0tId: string;
+    privateSubne1tId: string;
     keyPairEC2: string;
     maxSizeASG: string;
     minSizeASG: string;
@@ -26,8 +31,7 @@ export class EksNodesSpot extends cdk.Construct {
     nodesLaunchTemplate: ec2.CfnLaunchTemplate
     autoScalingGroup: autoscaling.CfnAutoScalingGroup
     nodesRole: iam.Role
-    nodesSecurityGroup: ec2.SecurityGroup
-    nodesSharedSecurityGroup: ec2.SecurityGroup
+
 
     constructor(scope: cdk.Construct, id: string, props: EksNodesProps) {
         super(scope, id)
@@ -45,25 +49,6 @@ export class EksNodesSpot extends cdk.Construct {
             roles: [this.nodesRole.roleName]
         });
 
-        this.nodesSecurityGroup = new ec2.SecurityGroup(this, "NodesSecurityGroup",{
-            securityGroupName: "nodes-for-eks-sg",
-            vpc: props.baseNetwork.vpc
-        });
-        //control panel access to nodes
-        this.nodesSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22));
-        this.nodesSecurityGroup.addIngressRule(props.eksCluster.controlPlaneSG, ec2.Port.tcpRange(1025,65535))
-        this.nodesSecurityGroup.addIngressRule(props.eksCluster.controlPlaneSG, ec2.Port.tcp(443))
-        
-
-        //access to control panel
-        props.eksCluster.controlPlaneSG.addIngressRule(this.nodesSecurityGroup, ec2.Port.tcp(443))
-
-        this.nodesSharedSecurityGroup = new ec2.SecurityGroup(this, "NodesSharedSecurityGroup",{
-            securityGroupName: "nodes-shared-for-eks-sg",
-            vpc: props.baseNetwork.vpc
-        });
-        //node shared
-        this.nodesSharedSecurityGroup.addIngressRule(this.nodesSharedSecurityGroup, ec2.Port.allTcp())
         
         this.nodesLaunchTemplate = new ec2.CfnLaunchTemplate(this, "NodesLaunchTemplate", {
             launchTemplateName: "NodesLaunchTemplate",
@@ -72,7 +57,7 @@ export class EksNodesSpot extends cdk.Construct {
                 imageId: new eks.EksOptimizedAmi().getImage(this).imageId,
                 keyName: props.keyPairEC2,
                 iamInstanceProfile: {arn: ec2Profile.attrArn},
-                securityGroupIds: [this.nodesSecurityGroup.securityGroupId, this.nodesSharedSecurityGroup.securityGroupId],
+                securityGroupIds: [props.nodesSGId, props.nodesSharedSGId],
                 blockDeviceMappings: [{
                     deviceName: "/dev/xvda",
                     ebs: {
@@ -87,15 +72,11 @@ export class EksNodesSpot extends cdk.Construct {
            
         this.autoScalingGroup = new autoscaling.CfnAutoScalingGroup(this, "NodesAutoScalingGroup", {
             
-            availabilityZones: [
-                props.baseNetwork.vpc.publicSubnets[0].availabilityZone,
-                props.baseNetwork.vpc.publicSubnets[1].availabilityZone
-            ],
             vpcZoneIdentifier: [
-                props.baseNetwork.vpc.publicSubnets[0].subnetId,
-                props.baseNetwork.vpc.publicSubnets[1].subnetId,
-                props.baseNetwork.vpc.privateSubnets[0].subnetId,
-                props.baseNetwork.vpc.privateSubnets[1].subnetId
+                props.publicSubne0tId,
+                props.publicSubne1tId,
+                props.privateSubne0tId,
+                props.privateSubne1tId
             ],
             desiredCapacity: props.desiredCapacityASG,
             cooldown: props.cooldownASG,

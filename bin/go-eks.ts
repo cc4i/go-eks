@@ -11,6 +11,7 @@ const stack = new GoEksStack(app, 'GoEksStack', {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION
     },
+    stackName: process.env.STACK_NAME
 });
 
 //Tag envirionment & Owner

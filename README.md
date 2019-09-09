@@ -16,11 +16,11 @@ Automated launch EKS or ECS cluster, worker nodes with Auto Scaling Group are ma
 ```bash
 
 # Set fowllowing environemnt varibales for ECS
-IS_ECS=
-ECS_CLUSTER_NAME=
+IS_ECS=yes
+ECS_CLUSTER_NAME=my-ecs-cluster
 
 # Set fowllowing environemnt varibales for EKS
-EKS_CLUSTER_NAME=
+EKS_CLUSTER_NAME=my-eks-cluster
 
 ```
 
