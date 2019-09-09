@@ -43,18 +43,21 @@ export class Bastion extends cdk.Construct {
         });
         this.bastion.connections.allowFromAnyIpv4(ec2.Port.tcp(22))
         this.bastion.addUserData(
-            "set -e",
+            "cat << EOF > ~/first.sh",
+            "#!/bin/bash",
+            "set -xe",
+            "sleep 30",
             "sudo yum update -y",
             "sudo yum install -y aws-cfn-bootstrap aws-cli jq wget git",
             "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash",
             ". ~/.nvm/nvm.sh",
             "nvm install node",
             "npm i -g aws-cdk",
-            "curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/kubectl",
-            "chmod +x ./kubectl",
-            "curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator",
-            "chmod +x ./aws-iam-authenticator",
-            "export PATH=$HOME:$PATH",
+            "mkdir ~/bin",
+            "curl -o ~/bin/kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/kubectl",
+            "chmod +x ~/bin/kubectl",
+            "curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator",
+            "chmod +x ~/bin/aws-iam-authenticator",
             "git clone https://github.com/cc4i/go-eks.git",
 
             "cd go-eks",
@@ -67,13 +70,15 @@ export class Bastion extends cdk.Construct {
             "export AWS_SECRET_ACCESS_KEY="+process.env.AWS_SECRET_ACCESS_KEY,
             "npm install",
             "npm run build",
-            "sleep 20",
-            "cdk deploy",
-
+            "cdk deploy --require-approval never",
+            "cd ~",
             "aws eks --region "+cdk.Aws.REGION+" update-kubeconfig --name "+eks_cluster_name,
-            "curl -o aws-auth-cm.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/aws-auth-cm.yaml",
-            "sed -i -e 's/<ARN of instance role (not instance profile)>/arn:aws:iam::"+cdk.Aws.ACCOUNT_ID+":role\/nodes-for-eks-role/g' ./aws-auth-cm.yaml",
-            "kubectl apply -f ./aws-auth-cm.yaml",
+            "curl -o ~/aws-auth-cm.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/aws-auth-cm.yaml",
+            "sed -i -e 's/<ARN of instance role (not instance profile)>/arn:aws:iam::"+cdk.Aws.ACCOUNT_ID+":role"+"\\"+"/nodes-for-eks-role/g' ~/aws-auth-cm.yaml",
+            "kubectl apply -f ~/aws-auth-cm.yaml",
+            "EOF",
+            "chmod +x ~/first.sh",
+            "nohup ~/first.sh &"
 
         );
         
