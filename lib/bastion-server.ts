@@ -51,6 +51,8 @@ export class Bastion extends cdk.Construct {
                                 "#!/bin/bash",
                                 "set -xe",
                                 "sleep 30",
+                                "cd ~",
+                                "export HOME=~",
                                 "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash",
                                 ". ~/.nvm/nvm.sh",
                                 "nvm install node",
@@ -60,13 +62,12 @@ export class Bastion extends cdk.Construct {
                                 "chmod +x ~/bin/kubectl",
                                 "curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/aws-iam-authenticator",
                                 "chmod +x ~/bin/aws-iam-authenticator",
+                                "export PATH=~/bin:$PATH",
                                 "git clone https://github.com/cc4i/go-eks.git",
-                    
                                 "cd go-eks",
                                 
                                 "export EKS_CLUSTER_NAME="+eks_cluster_name,
                                 "export EKS_STAGE_2=yes",
-                                "export STACK_NAME=GoStackClusterStack",
                                 "export AWS_DEFAULT_REGION="+cdk.Aws.REGION,
                                 "export AWS_ACCESS_KEY_ID="+process.env.AWS_ACCESS_KEY_ID,
                                 "export AWS_SECRET_ACCESS_KEY="+process.env.AWS_SECRET_ACCESS_KEY,
