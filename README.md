@@ -6,40 +6,87 @@ Automated launch EKS or ECS cluster, worker nodes with Auto Scaling Group are ma
 
 ## Prerequisite
 
-[awscli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+1. Install [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 
-[cdk](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html#getting_started_install)
+2. Install [AWS SDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html#getting_started_install)
 
 
-## Configure environment
+## ECS
+
+### Blueprint
+<img src="./docs/cdk-ecs.png"/>
+
+### Configure environment
 
 ```bash
 
-# Set fowllowing environemnt varibales for ECS
+# choose you favorite cluster name
 export IS_ECS=yes
 export ECS_CLUSTER_NAME=my-ecs-cluster
+export AWS_DEFAULT_REGION=#?#
+export AWS_ACCESS_KEY_ID=#?#
+export AWS_SECRET_ACCESS_KEY=#?#
 
-# Set fowllowing environemnt varibales for EKS
-export EKS_CLUSTER_NAME=my-eks-cluster
-
-# Set following environemnt varibales for all
-export AWS_DEFAULT_REGION=
-export AWS_ACCESS_KEY_ID=
-export AWS_SECRET_ACCESS_KEY=
 ```
 
 
-## Provision
+### Provision
 
 ```bash
 
 npm run build
-cdk deploy
+cdk deploy GoEcs
+
+```
+
+### Ready to go
+
+```bash
+
+aws ecs  list-clusters
+
+```
+
+## EKS
+
+### Blueprint
+<img src="./docs/cdk-eks.png"/>
+
+### Configure environment
+
+```bash
+
+# choose you favorite cluster name
+unset IS_ECS
+export EKS_CLUSTER_NAME=my-eks-cluster
+export EKS_STAGE_1=yes
+export AWS_DEFAULT_REGION=#?#
+export AWS_ACCESS_KEY_ID=#?#
+export AWS_SECRET_ACCESS_KEY=#?#
+```
+
+
+### Provision
+
+```bash
+
+npm run build
+cdk deploy GoEks
+
+```
+
+### Ready to go
+
+```bash
+
+sudo su -
+kubectl get svc
+kubectl get nodes
 
 ```
 
 
-## Note
+### Note
 
 When you create an Amazon EKS cluster, the IAM entity user or role, such as a federated user that creates the cluster, is automatically granted system:masters permissions in the cluster's RBAC configuration. To grant additional AWS users or roles the ability to interact with your cluster, you must edit the aws-auth ConfigMap within Kubernetes.
 

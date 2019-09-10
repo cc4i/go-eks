@@ -4,9 +4,9 @@ import ec2 = require('@aws-cdk/aws-ec2');
 import { BaseNetwrok } from './base-network';
 import { EksCluster } from './eks-cluster';
 import { EksNodesSpot } from './eks-nodes-spot';
-import {EksWithSimple} from './eks-cluster-simple'
-import { Ec2Service } from '@aws-cdk/aws-ecs';
-import { Bastion } from './bastion-server'
+// import {EksWithSimple} from './eks-cluster-simple'
+import { EcsBastion } from './ecs-bastion-server'
+import { EksBastion } from './eks-bastion-server'
 import { EcsWithSpot } from './ecs-cluster-spot';
 
 
@@ -25,6 +25,11 @@ export class GoEksStack extends cdk.Stack {
     if (is_ecs != undefined) {
         // VPC
         let baseNetwork = new BaseNetwrok(this, "BaseNetwork");
+
+        const ecsBastion = new EcsBastion(this, 'Bastion', {
+          baseNetwork: baseNetwork,
+          keyPairEC2: "ore-keypair",
+        });
         
         // ECS
         if (ecs_cluster_name == undefined) { ecs_cluster_name=id+"-ecs-cluster" }
@@ -46,7 +51,7 @@ export class GoEksStack extends cdk.Stack {
         let baseNetwork = new BaseNetwrok(this, "BaseNetwork");
 
         if (eks_cluster_name == undefined) { eks_cluster_name=id+"-eks-cluster" }
-        const bastion = new Bastion(this, 'Bastion', {
+        const eksBastion = new EksBastion(this, 'Bastion', {
           baseNetwork: baseNetwork,
           keyPairEC2: "ore-keypair",
           clusterName: eks_cluster_name,

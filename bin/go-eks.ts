@@ -6,14 +6,22 @@ import os = require('os')
 import { Tag } from '@aws-cdk/core';
 
 const app = new cdk.App();
-const stackBase = new GoEksStack(app, 'GoEksBase', {
+
+const stackEcsCluster = new GoEksStack(app, 'GoEcs', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION
     },
 });
 
-const stackCluster = new GoEksStack(app, 'GoEksCluster', {
+const stackEksBase = new GoEksStack(app, 'GoEks', {
+    env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION
+    },
+});
+
+const stackEksCluster = new GoEksStack(app, 'GoEksCluster', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION
@@ -21,5 +29,6 @@ const stackCluster = new GoEksStack(app, 'GoEksCluster', {
 });
 
 //Tag envirionment & Owner
-stackBase.node.applyAspect(new Tag("Env","Prod"))
-stackBase.node.applyAspect(new Tag("Owner","CC"))
+stackEcsCluster.node.applyAspect(new Tag("Owner","CC"))
+stackEksBase.node.applyAspect(new Tag("Owner","CC"))
+stackEksCluster.node.applyAspect(new Tag("Owner","CC"))

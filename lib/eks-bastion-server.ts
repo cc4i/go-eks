@@ -3,25 +3,20 @@ import ec2 = require('@aws-cdk/aws-ec2');
 import iam = require('@aws-cdk/aws-iam');
 
 import { BaseNetwrok } from './base-network';
-import { EksCluster } from './eks-cluster';
-import {EksNodesSpot} from './eks-nodes-spot'
-import { networkInterfaces } from 'os';
 
-export interface BastionProps {
+export interface EksBastionProps {
     baseNetwork: BaseNetwrok;
     keyPairEC2: string;
     clusterName: string;
 }
 
-export class Bastion extends cdk.Construct {
+export class EksBastion extends cdk.Construct {
 
     bastion: ec2.Instance;
     bastionRole: iam.Role
 
-    constructor(scope: cdk.Construct, id: string, props: BastionProps) {
+    constructor(scope: cdk.Construct, id: string, props: EksBastionProps) {
         super(scope, id);
-
-        let eks_cluster_name = process.env.EKS_CLUSTER_NAME;
 
         this.bastionRole = new iam.Role(this, "BastionRole", {
             roleName: "bastion-role",
@@ -66,7 +61,7 @@ export class Bastion extends cdk.Construct {
                                 "git clone https://github.com/cc4i/go-eks.git",
                                 "cd go-eks",
                                 
-                                "export EKS_CLUSTER_NAME="+eks_cluster_name,
+                                "export EKS_CLUSTER_NAME="+props.clusterName,
                                 "export EKS_STAGE_2=yes",
                                 "export AWS_DEFAULT_REGION="+cdk.Aws.REGION,
                                 "export AWS_ACCESS_KEY_ID="+process.env.AWS_ACCESS_KEY_ID,
@@ -75,7 +70,7 @@ export class Bastion extends cdk.Construct {
                                 "npm run build",
                                 "cdk deploy GoEksCluster --require-approval never",
                                 "cd ~",
-                                "aws eks --region "+cdk.Aws.REGION+" update-kubeconfig --name "+eks_cluster_name,
+                                "aws eks --region "+cdk.Aws.REGION+" update-kubeconfig --name "+props.clusterName,
                                 "curl -o ~/aws-auth-cm.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/aws-auth-cm.yaml",
                                 "sed -i -e 's/<ARN of instance role (not instance profile)>/arn:aws:iam::"+cdk.Aws.ACCOUNT_ID+":role"+"\\"+"/nodes-for-eks-role/g' ~/aws-auth-cm.yaml",
                                 "kubectl apply -f ~/aws-auth-cm.yaml",
