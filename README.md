@@ -1,7 +1,7 @@
 
-# Launch EKS/ECS  by CDK
+# Launch EKS/ECS by CDK
 
-Automated launch EKS or ECS cluster, worker nodes with Auto Scaling Group are made up by On-Demand and Spot. 
+Automated provisoning EKS or ECS cluster, worker nodes are managed by Auto Scaling group and made up with On-Demand and Spot instances. 
 
 
 ## Prerequisite
