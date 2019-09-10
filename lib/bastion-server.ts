@@ -46,7 +46,7 @@ export class Bastion extends cdk.Construct {
             {
                 "config": {
                     "files": {
-                        "/home/ec2-user/first-run.sh": {
+                        "/root/first-run.sh": {
                             "content": [
                                 "#!/bin/bash",
                                 "set -xe",
@@ -79,11 +79,16 @@ export class Bastion extends cdk.Construct {
                                 "curl -o ~/aws-auth-cm.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/aws-auth-cm.yaml",
                                 "sed -i -e 's/<ARN of instance role (not instance profile)>/arn:aws:iam::"+cdk.Aws.ACCOUNT_ID+":role"+"\\"+"/nodes-for-eks-role/g' ~/aws-auth-cm.yaml",
                                 "kubectl apply -f ~/aws-auth-cm.yaml",
+                                "echo 'export AWS_DEFAULT_REGION="+cdk.Aws.REGION+"'>>~/.bash_profile",
+                                "echo 'export AWS_ACCESS_KEY_ID="+process.env.AWS_ACCESS_KEY_ID+"'>>~/.bash_profile",
+                                "echo 'export AWS_SECRET_ACCESS_KEY="+process.env.AWS_SECRET_ACCESS_KEY+"'>>~/.bash_profile",
+                                "echo 'export PATH=~/bin:$PATH'>>~/.bash_profile",
+
                                                    
                             ].join('\n'),
                             "mode": "000755",
-                            "owner": "ec2-user",
-                            "group": "ec2-user"
+                            "owner": "root",
+                            "group": "root"
                         }
                     },
                     // "commands": {
@@ -95,7 +100,7 @@ export class Bastion extends cdk.Construct {
                     //             "AWS_ACCESS_KEY_ID": process.env.AWS_ACCESS_KEY_ID,
                     //             "AWS_SECRET_ACCESS_KEY": process.env.AWS_SECRET_ACCESS_KEY
                     //         },
-                    //         "cwd": "/home/ec2-user",
+                    //         "cwd": "/root",
                     //         "ignoreErrors": false
                     //     }
                     // }
@@ -108,7 +113,7 @@ export class Bastion extends cdk.Construct {
             `sudo yum update -y`,
             `sudo yum install -y aws-cfn-bootstrap aws-cli jq wget git`,
             `/opt/aws/bin/cfn-init -v --stack ${cdk.Aws.STACK_NAME} --resource ${this.bastion.instance.logicalId} --region ${cdk.Aws.REGION}`,
-            `nohup /home/ec2-user/first-run.sh &`
+            `nohup /root/first-run.sh &`
 
         );
         
