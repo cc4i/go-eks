@@ -2,6 +2,7 @@ import cdk = require('@aws-cdk/core');
 import ec2 = require('@aws-cdk/aws-ec2');
 import { CfnNatGateway } from '@aws-cdk/aws-ec2';
 import { SSL_OP_ALL } from 'constants';
+import { Tag } from '@aws-cdk/core';
 
 
 
@@ -19,6 +20,11 @@ export class BaseNetwrok extends cdk.Construct {
           cidr: "10.0.0.0/16",
           maxAzs: 2
         });
+
+        this.vpc.publicSubnets[0].node.applyAspect(new Tag("kubernetes.io/role/elb","1"));
+        this.vpc.publicSubnets[1].node.applyAspect(new Tag("kubernetes.io/role/elb","1"));
+        this.vpc.privateSubnets[0].node.applyAspect(new Tag("kubernetes.io/role/internal-elb","1"));
+        this.vpc.privateSubnets[1].node.applyAspect(new Tag("kubernetes.io/role/internal-elb","1"));
 
         const baseVpcId = new cdk.CfnOutput(this,"BaseVpcId", {
           exportName: "BaseVpcId",

@@ -42,9 +42,9 @@ export class EcsBastion extends cdk.Construct {
             `sudo yum update -y`,
             `sudo yum install -y aws-cfn-bootstrap aws-cli jq wget git`,
             `/opt/aws/bin/cfn-init -v --stack ${cdk.Aws.STACK_NAME} --resource ${this.bastion.instance.logicalId} --region ${cdk.Aws.REGION}`,
-            `echo 'export AWS_DEFAULT_REGION="+${cdk.Aws.REGION}+"'>>/home/ec2-user/.bash_profile`,
-            `echo 'export AWS_ACCESS_KEY_ID="+${process.env.AWS_ACCESS_KEY_ID}+"'>>/home/ec2-user/.bash_profile`,
-            `echo 'export AWS_SECRET_ACCESS_KEY="+${process.env.AWS_SECRET_ACCESS_KEY}+"'>>/home/ec2-user/.bash_profile`
+            `echo 'export AWS_DEFAULT_REGION=${cdk.Aws.REGION}'>>/home/ec2-user/.bash_profile`,
+            `echo 'export AWS_ACCESS_KEY_ID=${process.env.AWS_ACCESS_KEY_ID}'>>/home/ec2-user/.bash_profile`,
+            `echo 'export AWS_SECRET_ACCESS_KEY=${process.env.AWS_SECRET_ACCESS_KEY}'>>/home/ec2-user/.bash_profile`
 
         );
         
